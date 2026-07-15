@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Heart, MoreVertical, X, LayoutDashboard, LogOut, User, Shield, MessageCircle } from 'lucide-react';
 import { useRoute, useNavigate, type Route } from '../router';
 import { useAuth } from '../context/AuthContext';
+import { useSmartsupp } from '../hooks/useSmartsupp';
 
 const navItems: { label: string; route: Route }[] = [
   { label: 'Home', route: 'home' },
@@ -16,6 +17,7 @@ export default function Navbar() {
   const route = useRoute();
   const navigate = useNavigate();
   const { user, profile, isAdmin, signOut } = useAuth();
+  const { ready: chatReady, openChat } = useSmartsupp();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -31,10 +33,9 @@ export default function Navbar() {
     setMobileOpen(false);
   };
 
-  const openLiveChat = () => {
-    if (typeof window !== 'undefined' && (window as any).smartsupp) {
-      (window as any).smartsupp('chat:open');
-    }
+  const handleLiveChat = () => {
+    if (!chatReady) return;
+    openChat();
   };
 
   return (
@@ -91,9 +92,14 @@ export default function Navbar() {
             </button>
           )}
           <button
-            onClick={openLiveChat}
-            className="flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-green-700 hover:shadow-lg"
-            title="Live Chat"
+            onClick={handleLiveChat}
+            disabled={!chatReady}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold text-white shadow-md transition-all ${
+              chatReady
+                ? 'bg-green-600 hover:bg-green-700 hover:shadow-lg cursor-pointer'
+                : 'bg-green-400 cursor-wait opacity-70'
+            }`}
+            title={chatReady ? 'Live Chat' : 'Loading chat...'}
           >
             <MessageCircle className="h-4 w-4" />
             LIVE CHAT
@@ -136,9 +142,14 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 lg:hidden">
           <button
-            onClick={openLiveChat}
-            className="flex items-center gap-1 rounded-full bg-green-600 px-2.5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-green-700"
-            title="Live Chat"
+            onClick={handleLiveChat}
+            disabled={!chatReady}
+            className={`flex items-center gap-1 rounded-full px-2.5 py-2 text-xs font-bold text-white shadow-md transition-all ${
+              chatReady
+                ? 'bg-green-600 hover:bg-green-700 cursor-pointer'
+                : 'bg-green-400 cursor-wait opacity-70'
+            }`
+            title={chatReady ? 'Live Chat' : 'Loading chat...'}
           >
             <MessageCircle className="h-4 w-4" />
             LIVE CHAT
