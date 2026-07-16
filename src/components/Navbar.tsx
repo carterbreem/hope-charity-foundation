@@ -156,7 +156,6 @@ export default function Navbar() {
             className="rounded-lg p-2 text-neutral-700"
             aria-label="Toggle menu"
           >
-          >
             {mobileOpen ? <X className="h-6 w-6" /> : <MoreVertical className="h-6 w-6" />}
           </button>
         </div>
