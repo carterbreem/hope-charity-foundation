@@ -35,6 +35,9 @@ export default function AdminLogin() {
 
     const result = await signIn(form.email, form.password);
 
+    // eslint-disable-next-line no-console
+    console.info('[AdminLogin] signIn result', { error: result.error, user, isAdmin });
+
     setSubmitting(false);
 
     if (result.error) {
