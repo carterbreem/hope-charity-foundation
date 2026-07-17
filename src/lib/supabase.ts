@@ -3,7 +3,18 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+if (!supabaseUrl || !supabaseAnonKey) {
+  // Non-sensitive visibility only: log which variables are missing so builds/deploys are diagnosable.
+  // Avoid printing the actual keys.
+  const missing = [
+    !supabaseUrl && 'VITE_SUPABASE_URL',
+    !supabaseAnonKey && 'VITE_SUPABASE_ANON_KEY',
+  ].filter(Boolean);
+  // eslint-disable-next-line no-console
+  console.error(`[Supabase] Missing required build env(s): ${missing.join(', ')}. Please ensure these are set for your Vite build (Netlify: Build & deploy -> Environment).`);
+}
+
+export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
