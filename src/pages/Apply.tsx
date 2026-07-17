@@ -189,35 +189,44 @@ export default function Apply() {
     }
 
     setSubmitting(true);
-    const { data, error: insertError } = await supabase
-      .from('applications')
-      .insert({
-        applicant_name: form.applicant_name,
-        email: form.email,
-        phone: form.phone || null,
-        address: form.address || null,
-        city: form.city || null,
-        region: form.region || null,
-        postal_code: form.postal_code || null,
-        country: form.country || null,
-        assistance_type: form.assistance_type,
-        amount_requested: amount,
-        description: form.description,
-        why_needed: form.why_needed,
-        how_helps: form.how_helps,
-      })
-      .select('id, reference_number')
-      .single();
+    try {
+      const { data, error: insertError } = await supabase
+        .from('applications')
+        .insert({
+          applicant_name: form.applicant_name,
+          email: form.email,
+          phone: form.phone || null,
+          address: form.address || null,
+          city: form.city || null,
+          region: form.region || null,
+          postal_code: form.postal_code || null,
+          country: form.country || null,
+          assistance_type: form.assistance_type,
+          amount_requested: amount,
+          description: form.description,
+          why_needed: form.why_needed,
+          how_helps: form.how_helps,
+        })
+        .select('id, reference_number')
+        .single();
 
-    setSubmitting(false);
+      setSubmitting(false);
 
-    if (insertError) {
-      setError(insertError.message);
-      return;
+      if (insertError) {
+        // eslint-disable-next-line no-console
+        console.error('[Apply] insert error', insertError.message);
+        setError('We were unable to submit your application at this time. Please try again later.');
+        return;
+      }
+
+      setSubmittedRef(data.reference_number ?? data.id);
+      setSuccess(true);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[Apply] unexpected error', err);
+      setSubmitting(false);
+      setError('We encountered an unexpected error. Please try again later.');
     }
-
-    setSubmittedRef(data.reference_number ?? data.id);
-    setSuccess(true);
   };
 
   if (!user) {
@@ -315,7 +324,6 @@ export default function Apply() {
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <button onClick={() => navigate('tracker')} className="btn-primary">
                 Track My Application
-                <ArrowRight className="h-4 w-4" />
               </button>
               <button
                 onClick={() => {
@@ -390,220 +398,6 @@ export default function Apply() {
                     className="input-field"
                     placeholder="+44 20 1234 5678"
                   />
-                  <p className="mt-1 text-xs text-neutral-400">Include country code (e.g. +44, +1, +91)</p>
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                    Country *
-                  </label>
-                  <CountrySelect
-                    value={form.country}
-                    onChange={(v) => update('country', v)}
-                  />
                 </div>
               </div>
 
-              {/* International Address Fields */}
-              <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                    Street Address
-                  </label>
-                  <input
-                    type="text"
-                    value={form.address}
-                    onChange={(e) => update('address', e.target.value)}
-                    className="input-field"
-                    placeholder="123 Main Street, Apt 4B"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={form.city}
-                    onChange={(e) => update('city', e.target.value)}
-                    className="input-field"
-                    placeholder="London"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                    State / Province / Region
-                  </label>
-                  <input
-                    type="text"
-                    value={form.region}
-                    onChange={(e) => update('region', e.target.value)}
-                    className="input-field"
-                    placeholder="Greater London"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                    Postal / ZIP Code
-                  </label>
-                  <input
-                    type="text"
-                    value={form.postal_code}
-                    onChange={(e) => update('postal_code', e.target.value)}
-                    className="input-field"
-                    placeholder="SW1A 1AA"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <label className="mb-2 block text-sm font-medium text-neutral-700">
-                  Country *
-                </label>
-                <CountrySelect
-                  value={form.country}
-                  onChange={(v) => update('country', v)}
-                />
-              </div>
-            </div>
-
-            <div className="my-8 border-t border-neutral-100" />
-
-            {/* Section: Assistance Details */}
-            <div>
-              <div className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-primary-600" />
-                <h3 className="text-base font-bold text-neutral-900">Assistance Details</h3>
-              </div>
-
-              <div className="mt-5">
-                <label className="mb-3 block text-sm font-medium text-neutral-700">
-                  Assistance Category *
-                </label>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {ASSISTANCE_CATEGORIES.map((cat) => {
-                    const Icon = categoryIcons[cat.value];
-                    return (
-                      <button
-                        key={cat.value}
-                        type="button"
-                        onClick={() => update('assistance_type', cat.value)}
-                        className={`flex flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition-all ${
-                          form.assistance_type === cat.value
-                            ? 'border-primary-600 bg-primary-50'
-                            : 'border-neutral-200 hover:border-primary-300'
-                        }`}
-                      >
-                        <Icon className={`h-6 w-6 ${form.assistance_type === cat.value ? 'text-primary-600' : 'text-neutral-400'}`} />
-                        <span className={`text-sm font-semibold ${form.assistance_type === cat.value ? 'text-primary-700' : 'text-neutral-700'}`}>
-                          {cat.shortLabel}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {form.assistance_type && (
-                  <p className="mt-3 text-xs text-neutral-500">
-                    {ASSISTANCE_CATEGORIES.find((c) => c.value === form.assistance_type)?.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-5">
-                <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                  Amount of Assistance Requested ($) *
-                </label>
-                <div className="relative max-w-xs">
-                  <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    step="0.01"
-                    value={form.amount_requested}
-                    onChange={(e) => update('amount_requested', e.target.value)}
-                    className="input-field pl-10"
-                    placeholder="500.00"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                  Description of Your Situation *
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={form.description}
-                  onChange={(e) => update('description', e.target.value)}
-                  className="input-field resize-none"
-                  placeholder="Please describe your current situation..."
-                />
-                <p className="mt-1.5 text-xs text-neutral-500">
-                  Provide as much detail as possible to help us understand your current circumstances.
-                </p>
-              </div>
-
-              <div className="mt-5">
-                <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                  Why Assistance Is Needed *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={form.why_needed}
-                  onChange={(e) => update('why_needed', e.target.value)}
-                  className="input-field resize-none"
-                  placeholder="Explain why you are seeking assistance at this time..."
-                />
-              </div>
-
-              <div className="mt-5">
-                <label className="mb-1.5 block text-sm font-medium text-neutral-700">
-                  How the Assistance Will Help *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={form.how_helps}
-                  onChange={(e) => update('how_helps', e.target.value)}
-                  className="input-field resize-none"
-                  placeholder="Describe how this assistance will make a difference for you and your family..."
-                />
-              </div>
-            </div>
-
-            <div className="my-8 border-t border-neutral-100" />
-
-            {/* Consent */}
-            <div className="flex items-start gap-4 rounded-xl bg-primary-50 p-4">
-              <input type="checkbox" required id="consent" className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500" />
-              <label htmlFor="consent" className="text-sm text-neutral-700">
-                I confirm that the information provided is accurate and complete to the best of my knowledge. I understand that my information will be kept confidential and used only for evaluating my request.
-              </label>
-            </div>
-
-            <div className="mt-8 flex items-center gap-4">
-              <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
-                {submitting ? (
-                  <>
-                    <Spinner className="h-4 w-4 border-white/30 border-t-white" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <HandHeart className="h-4 w-4" />
-                    Submit Application
-                  </>
-                )}
-              </button>
-              <button type="button" onClick={() => navigate('home')} className="btn-ghost">
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </section>
-    </div>
-  );
-}
