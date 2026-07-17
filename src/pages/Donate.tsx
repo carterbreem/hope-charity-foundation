@@ -85,25 +85,34 @@ export default function Donate() {
       return;
     }
 
-    const { error: insertError } = await supabase.from('donations').insert({
-      donor_name: form.donor_name,
-      email: form.email,
-      phone: form.phone || null,
-      amount: finalAmount,
-      message: form.message || null,
-      status: 'pending',
-      provider: selectedPayment,
-      provider_payment_id: null,
-    });
+    try {
+      const { error: insertError } = await supabase.from('donations').insert({
+        donor_name: form.donor_name,
+        email: form.email,
+        phone: form.phone || null,
+        amount: finalAmount,
+        message: form.message || null,
+        status: 'pending',
+        provider: selectedPayment,
+        provider_payment_id: null,
+      });
 
-    setSubmitting(false);
+      setSubmitting(false);
 
-    if (insertError) {
-      setError(insertError.message);
-      return;
+      if (insertError) {
+        // eslint-disable-next-line no-console
+        console.error('[Donate] insert error', insertError.message);
+        setError('We were unable to record your donation. Please try again later.');
+        return;
+      }
+
+      setSuccess(true);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[Donate] unexpected error', err);
+      setSubmitting(false);
+      setError('We encountered an unexpected error. Please try again later.');
     }
-
-    setSuccess(true);
   };
 
   if (success) {
