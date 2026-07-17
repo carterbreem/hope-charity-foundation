@@ -1,8 +1,15 @@
+# Netlify configuration for hope-charity-foundation
+#
+# This file includes a commented example environment block showing how to
+# set Vite build-time environment variables in Netlify. DO NOT add secrets
+# to the repository. Set them in Netlify Dashboard -> Site settings -> Build & deploy -> Environment.
+#
+#[build.environment]
+#  VITE_SUPABASE_URL = "https://your-project.supabase.co"
+#  VITE_SUPABASE_ANON_KEY = "public-anon-key"
+#  # Optional Smartsupp key to load the chat widget dynamically
+#  # VITE_SMARTSUPP_KEY = "your-smartsupp-key"
+
 [build]
   command = "npm run build"
   publish = "dist"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
